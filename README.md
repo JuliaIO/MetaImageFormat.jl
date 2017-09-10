@@ -1,8 +1,8 @@
 # MetaImageFormat
 
-[![Build Status](https://travis-ci.org/timholy/MetaImageFormat.jl.svg?branch=master)](https://travis-ci.org/timholy/MetaImageFormat.jl)
+[![Build Status](https://travis-ci.org/JuliaIO/MetaImageFormat.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/MetaImageFormat.jl)
 
-[![codecov.io](http://codecov.io/github/timholy/MetaImageFormat.jl/coverage.svg?branch=master)](http://codecov.io/github/timholy/MetaImageFormat.jl?branch=master)
+[![codecov.io](http://codecov.io/github/JuliaIO/MetaImageFormat.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaIO/MetaImageFormat.jl?branch=master)
 
 This package supports the
 [MetaImage](https://itk.org/Wiki/ITK/MetaIO/Documentation#Reference:_Tags_of_MetaImage)
