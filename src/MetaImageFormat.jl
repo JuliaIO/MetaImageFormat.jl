@@ -457,7 +457,7 @@ See also: raw_eltype.
 function outer_eltype!(header, Traw, Tuser=Any)
     nd = header["NDims"]
     sz = header["DimSize"]
-    length(sz) == nd || error("parsing of sizes: $(header["sizes"]) is inconsistent with $nd dimensions")
+    length(sz) == nd || error("parsing of sizes: $sz is inconsistent with $nd dimensions")
     perm = ()
     T = fixedtype(Traw, header)
     T, nd, perm
