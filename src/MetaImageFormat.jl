@@ -89,13 +89,13 @@ const mymsb = ENDIAN_BOM == 0x01020304
 # Don't extend FileIO.load
 # Set mode to "r+" if you want to be able to modify values in the
 # image and have them update in the disk file
-function load(f::File{format"MetaImageFormat"}, args...; mode="r", mmap=:auto)
+function load(f::File{format"MetaImage"}, args...; mode="r", mmap=:auto)
     open(f, mode) do io
         load(io, args...; mode=mode, mmap=mmap)
     end
 end
 
-function load(io::Stream{format"MetaImageFormat"}, Tuser::Type=Any; mode="r", mmap=:auto)
+function load(io::Stream{format"MetaImage"}, Tuser::Type=Any; mode="r", mmap=:auto)
     # Assemble all the information about the array we're about to
     # read: element type, size, and the "meaning" of axes
     header = parse_header(io)
@@ -109,7 +109,7 @@ function load(io::Stream{format"MetaImageFormat"}, Tuser::Type=Any; mode="r", mm
     iodata = find_datafile(io, header; mode=mode)
     compressed = get(header, "CompressedData", false)
     if compressed
-        error("The MetaImageFormat format doesn't appear to specifiy the compression algorithm, so not supported")
+        error("The MetaImage format doesn't appear to specifiy the compression algorithm, so not supported")
         # iodata = Libz.ZlibInflateInputStream(iodata)
     end
 
@@ -155,7 +155,7 @@ function load(io::Stream{format"MetaImageFormat"}, Tuser::Type=Any; mode="r", mm
     isa(axs, Dims) ? A : AxisArray(A, axs)
 end
 
-# function save(f::File{format"MetaImageFormat"}, img::AbstractArray; props::Dict = Dict{String,Any}(), keyvals=nothing, comments=nothing)
+# function save(f::File{format"MetaImage"}, img::AbstractArray; props::Dict = Dict{String,Any}(), keyvals=nothing, comments=nothing)
 #     open(f, "w") do io
 #         write(io, magic(format"NRRD"))
 #         save(io, img; props=props, keyvals=keyvals, comments=comments)
@@ -222,7 +222,7 @@ end
 """
     arraytype(filename)
 
-Parse MetaImageFormat header and calls `arraytype!(header)`. See
+Parse MetaImage header and call `arraytype!(header)`. See
 `arraytype!` for information about the return values.
 """
 function arraytype(filename)
@@ -490,7 +490,7 @@ get_size(axs) = map(length, axs)
 """
     header = parse_header(io)
 
-Parse the MetaImageFormat header (an .mhd file). `io` should be positioned
+Parse the MetaImage header (an .mhd file). `io` should be positioned
 at the beginning of the header file.
 
 See also: write_header.
@@ -511,10 +511,10 @@ function parse_header(io)
     header
 end
 
-parse_header(s::Stream{format"MetaImageFormat"}) = parse_header(stream(s))
+parse_header(s::Stream{format"MetaImage"}) = parse_header(stream(s))
 
 function parse_header(filename::AbstractString)
-    f = File{format"MetaImageFormat"}(filename)
+    f = File{format"MetaImage"}(filename)
     open(f) do io
         parse_header(io)
     end
@@ -695,7 +695,7 @@ function find_datafile(iodata::IOStream, header; mode="r", path=nothing)
     iodata
 end
 
-function find_datafile(s::Stream{format"MetaImageFormat"}, header; mode="r")
+function find_datafile(s::Stream{format"MetaImage"}, header; mode="r")
     find_datafile(stream(s), header; mode=mode)
 end
 
