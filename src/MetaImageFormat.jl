@@ -107,7 +107,7 @@ function load(io::Stream{format"MetaImageFormat"}, Tuser::Type=Any; mode="r", mm
 
     # Read the data
     iodata = find_datafile(io, header; mode=mode)
-    compressed = header["CompressedData"]
+    compressed = get(header, "CompressedData", false)
     if compressed
         error("The MetaImageFormat format doesn't appear to specifiy the compression algorithm, so not supported")
         # iodata = Libz.ZlibInflateInputStream(iodata)
@@ -457,7 +457,7 @@ See also: raw_eltype.
 function outer_eltype!(header, Traw, Tuser=Any)
     nd = header["NDims"]
     sz = header["DimSize"]
-    length(sz) == nd || error("parsing of sizes: $(header["sizes"]) is inconsistent with $nd dimensions")
+    length(sz) == nd || error("parsing of sizes: $sz is inconsistent with $nd dimensions")
     perm = ()
     T = fixedtype(Traw, header)
     T, nd, perm
