@@ -1,5 +1,3 @@
-__precompile__()
-
 module MetaImageFormat
 
 # Packages needed to return the possible range of element types
