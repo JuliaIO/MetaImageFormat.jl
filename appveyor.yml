@@ -44,4 +44,4 @@ build_script:
       Pkg.clone(pwd(), \"MetaImageFormat\"); Pkg.build(\"MetaImageFormat\")"
 
 test_script:
-  - C:\projects\julia\bin\julia -e "Pkg.test(\"MetaImageFormat\")"
+  - C:\projects\julia\bin\julia -e "using Pkg; Pkg.test(\"MetaImageFormat\")"
