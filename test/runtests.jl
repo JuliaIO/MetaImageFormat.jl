@@ -1,5 +1,5 @@
 using MetaImageFormat, FileIO, Images, AxisArrays
-using Base.Test
+using Test
 
 # TODO: change the next to lines to `load("example.mhd")` after registry
 f = File(format"MetaImage", "example.mhd")
