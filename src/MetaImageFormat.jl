@@ -12,6 +12,8 @@ using FileIO
 using Colors: AbstractGray
 using AxisArrays: HasAxes
 
+using LinearAlgebra
+
 string2type = Dict(
     "MET_UCHAR" => UInt8,
     "MET_SHORT" => Int16,
@@ -34,7 +36,7 @@ type2string(::Type{RGB{T}}) where T = type2string(T)*"_ARRAY"
 
 function space2axes(str)
     length(str) == 3 || error("AnatomicalOrientation string unrecognized, got $str")
-    ([Symbol(c) for c in str]...)
+    ([Symbol(c) for c in str]...,)
 end
 
 axes2space(syms::NTuple{3,Symbol}) = join(syms)
@@ -135,7 +137,9 @@ function load(io::Stream{format"MetaImage"}, Tuser::Type=Any; mode="r", mmap=:au
             A = mappedarray(f, A)
         end
     else
-        A = read(iodata, Traw, szraw...)
+        A = Array{Traw}(undef, szraw...)
+        read!(iodata, A)
+
         if need_bswap
             A = [bswap(a) for a in A]
         end
@@ -143,7 +147,7 @@ function load(io::Stream{format"MetaImage"}, Tuser::Type=Any; mode="r", mmap=:au
 
     if perm == ()
         if T != eltype(A)
-            A = need_bswap ? A = mappedarray(x->T(x), A) : reinterpret(T, A, sz)
+            A = need_bswap ? A = mappedarray(x->T(x), A) : reshape(reinterpret(T, vec(A)), sz)
         end
     else
         A = permuteddimsview(A, perm)
@@ -358,9 +362,10 @@ function raw_eltype(header)
     Traw, need_bswap
 end
 
-raw_eltype{C<:Colorant}(::Type{C}) = raw_eltype(eltype(C))
-raw_eltype{T<:FixedPoint}(::Type{T})   = FixedPointNumbers.rawtype(T)
-raw_eltype{T}(::Type{T}) = T
+#raw_eltype{C<:Colorant}(::Type{C}) = raw_eltype(eltype(C))
+raw_eltype(::Type{C}) where C <: Colorant = raw_eltype(eltype(C))
+raw_eltype(::Type{T}) where T <:FixedPoint = FixedPointNumbers.rawtype(T)
+raw_eltype(::Type{T}) where T = T
 
 """
     fixedtype(Traw, header) -> Tu
@@ -368,7 +373,7 @@ raw_eltype{T}(::Type{T}) = T
 Attempt to interpret type `Traw` in terms of FixedPoint numbers.
 If `Traw` cannot be interpreted as `Normed`, `Tu = Traw`.
 """
-function fixedtype{Traw<:Unsigned}(::Type{Traw}, header)
+function fixedtype(::Type{Traw}, header) where Traw <: Unsigned
     Traw == UInt8 && return N0f8
     if Traw == UInt16
         maxval = UInt16(get(header, "ElementMax", typemax(UInt16)))
@@ -382,9 +387,9 @@ function fixedtype{Traw<:Unsigned}(::Type{Traw}, header)
     end
     Traw
 end
-fixedtype{Traw}(::Type{Traw}, header) = Traw
+fixedtype(::Type{Traw}, header) where Traw = Traw
 
-function fixedtype_max{Traw<:Unsigned}(::Type{Traw}, mx)
+function fixedtype_max(::Type{Traw}, mx) where Traw <: Unsigned
     fmx = log2(mx+1)
     if round(fmx) == fmx
         return Normed{Traw,round(Int,fmx)}
@@ -429,8 +434,8 @@ Return a valid "inner" element type `Tc` for colorant type `C`. When
 `T` != `Tc`, values must be "converted" before they can be interpreted
 as type `C`.
 """
-colorant_eltype{C<:Colorant, T<:AbstractFloat}(::Type{C}, ::Type{T}) = C{T}
-colorant_eltype{C<:Colorant, T}(::Type{C}, ::Type{T}) = C{Float32}
+colorant_eltype(::Type{C}, ::Type{T}) where {C <: Colorant, T <: AbstractFloat} = C{T}
+colorant_eltype(::Type{C}, ::Type{T}) where {C <: Colorant, T} = C{Float32}
 
 """
     UnknownColor{T,N}
@@ -438,7 +443,7 @@ colorant_eltype{C<:Colorant, T}(::Type{C}, ::Type{T}) = C{Float32}
 An unknown Color. This type gets returned when one of the "kind"
 settings is "3-color" or "4-color".
 """
-immutable UnknownColor{T,N} <: Color{T,N}
+struct UnknownColor{T,N} <: Color{T,N}
     col::NTuple{N,T}
 end
 
@@ -471,15 +476,15 @@ function get_axes(header, nd)
                   nd == 3 ? (:x, :y, :z) : error("$nd dimension not handled")
     end
     tform = haskey(header, "TransformMatrix") ? header["TransformMatrix"] :
-            haskey(header, "Rotation") ? header["Rotation"] : eye(nd, nd)
-    if tform != eye(nd, nd)
+            haskey(header, "Rotation") ? header["Rotation"] : Matrix(I, nd, nd)
+    if tform != Matrix(I, nd, nd)
         error("rotations aren't yet handled, got $tform")
     end
     offset = get(header, "Offset", zeros(nd))
     spacing = get(header, "ElementSpacing", ones(nd))
     sz = header["DimSize"]
-    rng = map((o, s, l) -> range(o, s, l), offset, spacing, sz)
-    (map((name, r) -> Axis{name}(r), axnames, rng)...)
+    rng = map((o, s, l) -> range(o, step=s, length=l), offset, spacing, sz)
+    (map((name, r) -> Axis{name}(r), axnames, rng)...,)
 end
 
 get_size(sz::Dims) = sz
@@ -501,7 +506,7 @@ function parse_header(io)
     # between the header and data
     line = strip(readline(io))
     while !isempty(line)
-        idx = findfirst(line, '=')
+        idx = findfirst("=", line)[1]
         idx == 0 && error("no colon found in $line")
         key, value = strip(line[1:idx-1]), strip(line[idx+1:end])
         T = get(parse_type, key, String)
@@ -566,7 +571,7 @@ end
 # end
 # write_header(s::Stream{format"NRRD"}, args...) = write_header(stream(s), args...)
 
-meta_parse{T}(::Type{T}, str) = parse(T, str)  # fallback
+meta_parse(::Type{T}, str) where T = parse(T, str)  # fallback
 meta_parse(::Type{String}, str) = str
 
 function meta_parse(::Type{Bool}, str)
@@ -575,9 +580,9 @@ function meta_parse(::Type{Bool}, str)
     error("unrecognized boolean string $str")
 end
 
-function meta_parse{T}(::Type{VTuple{T}}, s::AbstractString)
+function meta_parse(::Type{VTuple{T}}, s::AbstractString) where T
     ss = split(s)
-    v = Vector{T}(length(ss))
+    v = Vector{T}(undef, length(ss))
     for i = 1:length(ss)
         v[i] = meta_parse(T, ss[i])
     end
@@ -592,9 +597,9 @@ function meta_parse(::Type{Matrix{T}}, s::AbstractString) where T
     reshape(v, sqrtl, sqrtl)
 end
 
-meta_format{T}(io, ::Type{T}, x) = print(io, x)
+meta_format(io, ::Type{T}, x) where T = print(io, x)
 
-function meta_format{T}(io, ::Type{VTuple{T}}, container)
+function meta_format(io, ::Type{VTuple{T}}, container) where T
     isfirst = true
     for x in container
         if isfirst
