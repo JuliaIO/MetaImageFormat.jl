@@ -506,7 +506,7 @@ function parse_header(io)
     # between the header and data
     line = strip(readline(io))
     while !isempty(line)
-        idx = findfirst("=", line)[1]
+        idx = findfirst(isequal('='), str)
         idx == 0 && error("no colon found in $line")
         key, value = strip(line[1:idx-1]), strip(line[idx+1:end])
         T = get(parse_type, key, String)
