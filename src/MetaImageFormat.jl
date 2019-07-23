@@ -33,8 +33,13 @@ type2string(::Type{Float32}) = "MET_FLOAT"
 type2string(::Type{RGB{T}}) where T = type2string(T)*"_ARRAY"
 
 function space2axes(str)
-    length(str) == 3 || error("AnatomicalOrientation string unrecognized, got $str")
-    ([Symbol(c) for c in str]...,)
+    syms = Symbol.(tuple(str...))
+    if length(syms) != 3 || !allunique(syms)
+        @warn "AnatomicalOrientation string unrecognized, got $str. Using xyz instead."
+        (:x, :y, :z)
+    else
+        syms
+    end
 end
 
 axes2space(syms::NTuple{3,Symbol}) = join(syms)
