@@ -12,6 +12,12 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MappedArrays = "dbb5928d-eab1-5f90-85c2-b9b0edb7c900"
 
 [compat]
+AxisArrays = "0.3, 0.4"
+ColorVectorSpace = "0.7, 0.8"
+Colors = "0.11"
+FileIO = "1"
+FixedPointNumbers = "0.6.1, 0.7"
+MappedArrays = "0.2"
 julia = "1"
 
 [extras]
