@@ -1,4 +1,4 @@
-using MetaImageFormat, FileIO, Images, AxisArrays
+using MetaImageFormat, FileIO, ImageCore, AxisArrays
 using Test
 
 img = load("example.mhd")
