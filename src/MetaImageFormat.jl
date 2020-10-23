@@ -1,15 +1,16 @@
 module MetaImageFormat
 
-# Packages needed to return the possible range of element types
-using FixedPointNumbers, Colors, ColorVectorSpace
+using ImageCore
+using ImageCore.FixedPointNumbers
+using ImageCore.Colors
+using ImageCore.MappedArrays
+using ColorVectorSpace
 # Other packages
-using AxisArrays, MappedArrays
+using AxisArrays
+using AxisArrays: HasAxes
+using ImageAxes
 using FileIO
 # import Libz   # what compression does MetaImageFormat use? seems undocumented
-
-using Colors: AbstractGray
-using AxisArrays: HasAxes
-
 using LinearAlgebra
 
 string2type = Dict(
@@ -153,7 +154,7 @@ function load(io::Stream{format"MetaImage"}, Tuser::Type=Any; mode="r", mmap=:au
             A = need_bswap ? A = mappedarray(x->T(x), A) : reshape(reinterpret(T, vec(A)), sz)
         end
     else
-        A = permuteddimsview(A, perm)
+        A = PermutedDimsArray(A, perm)
         if T<:Color
             A = colorview(T, A)
         end
