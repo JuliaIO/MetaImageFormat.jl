@@ -1,6 +1,6 @@
 # MetaImageFormat
 
-[![Build Status](https://travis-ci.org/JuliaIO/MetaImageFormat.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/MetaImageFormat.jl)
+[![Build Status](https://github.com/JuliaIO/MetaImageFormat.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/JuliaIO/MetaImageFormat.jl/actions/workflows/CI.yml)
 [![codecov.io](http://codecov.io/github/JuliaIO/MetaImageFormat.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaIO/MetaImageFormat.jl?branch=master)
 [![PkgEval][pkgeval-img]][pkgeval-url]
 
